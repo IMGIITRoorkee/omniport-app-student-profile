@@ -1,0 +1,7 @@
+nomenclature:
+  name: student_profile
+  verboseName: StudentProfile
+baseUrls:
+  http: student_profile/
+  ws: student_profile/
+  isApi: true

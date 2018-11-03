@@ -7,7 +7,7 @@ from kernel.managers.get_role import get_role
 
 class IsStudent(permissions.BasePermission):
     """
-    Custom permission check for the user to be faculty member or not
+    Custom permission check for the user to be student or not
     """
 
     def has_permission(self, request, view):
@@ -24,7 +24,7 @@ class IsStudent(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         """
-        Permission to check whether the object handled by the faculty member 
+        Permission to check whether the object handled by the student 
         belongs to the faculty member
         """
         

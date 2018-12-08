@@ -3,17 +3,17 @@ import swapper
 from rest_framework import serializers
 
 serializer_dict = {
-    'CurrentEducation' : None,
-    'PreviousEducation' : None,
-    'Achievement' : None,
-    'Experience' : None,
-    'Position' : None,
-    'Project' : None,
-    'Interest' : None,
-    'Skill' : None,
-    'Profile' : None,
-    'Book' : None,
-    'Paper' : None,
+    'CurrentEducation': None,
+    'PreviousEducation': None,
+    'Achievement': None,
+    'Experience': None,
+    'Position': None,
+    'Project': None,
+    'Interest': None,
+    'Skill': None,
+    'Profile': None,
+    'Book': None,
+    'Paper': None,
 }
 
 
@@ -38,9 +38,10 @@ def return_serializer(class_name):
             """
 
             model = swapper.load_model('student_biodata', class_name)
-            fields = '__all__'
+            exclude = ('datetime_created','datetime_modified',)
 
     return Serializer
+
 
 for key in serializer_dict:
     serializer_dict[key] = return_serializer(key)

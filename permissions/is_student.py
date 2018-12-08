@@ -17,7 +17,7 @@ class IsStudent(permissions.BasePermission):
         
         Student = swapper.load_model('kernel', 'Student')
         try:
-            faculty = get_role(request.person, 'Student')
+            student = get_role(request.person, 'Student')
             return True
         except Student.DoesNotExist:
             return False

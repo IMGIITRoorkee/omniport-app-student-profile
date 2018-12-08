@@ -1,7 +1,8 @@
 from django.conf.urls import url, include
 from rest_framework import routers
 import inflection
-from student_profile.views import viewset_dict
+from student_profile.views import viewset_dict, SocialLinkViewSet
+from student_profile.views import DragAndDropView
 
 models = [
     'CurrentEducation',
@@ -18,14 +19,16 @@ models = [
 ]
 
 router = routers.DefaultRouter()
-print(viewset_dict)
+
 for model in models:
     router.register(
         inflection.underscore(model),
         viewset_dict[model],
         base_name=model,
     )
-
+router.register(r'social_link', SocialLinkViewSet, base_name="SocialLink")
 urlpatterns = [
-    url(r'^', include(router.urls)),
+    url(r'rearrange', DragAndDropView.as_view()),
+    url(r'^', include(router.urls))
+    
 ]

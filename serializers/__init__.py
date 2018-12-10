@@ -1,1 +1,1 @@
-from student_profile.serializers import (generic_serializers, social_link) 
+from student_profile.serializers import (generic_serializers, social_link, referee) 

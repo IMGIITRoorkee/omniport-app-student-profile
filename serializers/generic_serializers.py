@@ -14,6 +14,7 @@ serializer_dict = {
     'Profile': None,
     'Book': None,
     'Paper': None,
+    'Referee':None
 }
 
 

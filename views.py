@@ -2,12 +2,13 @@ import swapper
 from django.db import transaction
 from django.db.models import FieldDoesNotExist
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.utils.datastructures import MultiValueDictKeyError
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser
 
 from kernel.managers.get_role import get_role
 from kernel.permissions.has_role import get_has_role
@@ -50,13 +51,12 @@ def return_viewset(class_name):
                 student = get_role(self.request.person, 'Student')
             except:
                 return []
-            options = ['priority', 'start_date', 'id']
+            options = ['priority','semester_number', 'start_date', 'id']
             for option in options[:]:
                 try:
                     Model._meta.get_field(option)
                 except FieldDoesNotExist:
                     options.remove(option)
-                    print(("Removed", option))
             return Model.objects.order_by(*options).filter(student=student)
 
         def perform_create(self, serializer):
@@ -80,13 +80,16 @@ def return_viewset(class_name):
             except ObjectDoesNotExist:
                 return Response(status=404,)
             student = profile.student
-            options = ['priority', 'start_date', 'id']
+            options = ['priority','semester_number', 'start_date', 'id']
             for option in options[:]:
                 try:
                     Model._meta.get_field(option)
                 except FieldDoesNotExist:
                     options.remove(option)
-            objects = Model.objects.order_by(*options).filter(student=student, visibility=True)
+            print(options)
+            print(student)
+            objects = Model.objects.order_by(*options).filter(student=student, )
+            print(objects)
             return Response(self.get_serializer(objects, many=True).data)
 
     return Viewset
@@ -141,7 +144,7 @@ class SocialLinkViewSet(ModelViewSet):
         except ObjectDoesNotExist:
             return Response(status=404,)
         student = profile.student
-        options = ['priority', 'start_date', 'id']
+        options = ['priority','semester_number', 'start_date', 'id']
         for option in options[:]:
             try:
                 Model._meta.get_field(option)
@@ -167,7 +170,33 @@ class ProfileViewset(ModelViewSet):
         except:
             return []
         return Model.objects.order_by('-id').filter(student=student)
+    
+    def create(self, request, *args, **kwargs):
+        """
+        Modifying create method to add functionality of adding profile image
+        """
 
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        data = serializer.data
+        person = request.person 
+        try: 
+            img_file = request.data['image']
+            if img_file is None or img_file == "null":
+                person.display_picture = None
+                person.save()  
+            else:
+                person.display_picture.save(img_file.name, img_file, save=True)
+        except MultiValueDictKeyError: 
+            pass
+        try:
+            data['displayPicture'] = request.person.display_picture.url       
+        except ValueError:
+            data['displayPicture'] = None
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+    
     def perform_create(self, serializer):
         """
         modifying perform_create for all the views to get Student
@@ -175,6 +204,38 @@ class ProfileViewset(ModelViewSet):
         """
         student = get_role(self.request.person, 'Student')
         serializer.save(student=student)
+
+    def update(self, request, *args, **kwargs):
+        """
+        modifying update function to change image field to null in case of deleting the profile image
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        parser_class = (MultiPartParser, )
+        self.perform_update(serializer)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+        data = serializer.data
+        try:
+            img_file = request.data['image']
+            person = request.person
+            if img_file is None or img_file == "null":
+                print('yay')
+                person.display_picture = None
+                person.save()
+            else:
+                person.display_picture.save(img_file.name, img_file, save=True)
+        except MultiValueDictKeyError:
+            pass
+        try:
+            data['displayPicture'] = request.person.display_picture.url       
+        except ValueError:
+            data['displayPicture'] = None
+        return Response(data)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -195,10 +256,17 @@ class ProfileViewset(ModelViewSet):
         """
         try:
             profile = swapper.load_model('student_biodata', 'Profile').objects.get(handle=pk)
+            data = self.get_serializer(profile).data
+            try:
+                data['displayPicture'] = profile.student.person.display_picture.url
+            except ValueError:
+                data['displayPicture'] = None
+            data['fullName'] = profile.student.person.full_name
         except ObjectDoesNotExist:
             return Response(status=404,)
 
-        return Response(self.get_serializer(profile).data)
+
+        return Response(data)
 viewset_dict['Profile'] = ProfileViewset
 
 

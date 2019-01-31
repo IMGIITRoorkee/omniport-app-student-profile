@@ -23,26 +23,49 @@ def return_serializer(class_name):
     Return the serializer for the given class
     :param class_name: the class whose serializer is being generated
     """
+    if (class_name == "CurrentEducation" or class_name == "PreviousEducation"):
 
-    class Serializer(serializers.ModelSerializer):
-        """
-        Serializer for given class name
-        """
-
-        student = serializers.ReadOnlyField(
-            source='student.person.full_name'
-        )
-
-        class Meta:
+        class Serializer(serializers.ModelSerializer):
             """
-            Meta class for Serializer
+            Serializer for given class name
             """
+        
 
-            model = swapper.load_model('student_biodata', class_name)
-            exclude = ('datetime_created','datetime_modified',)
+            student = serializers.ReadOnlyField(
+                source='student.person.full_name'
+            )
 
-    return Serializer
+            verified = serializers.ReadOnlyField()
 
+            class Meta:
+                """
+                Meta class for Serializer
+                """
+
+                model = swapper.load_model('student_biodata', class_name)
+                exclude = ('datetime_created','datetime_modified',)
+
+        return Serializer
+
+    else:
+        class Serializer(serializers.ModelSerializer):
+            """
+            Serializer for given class name
+            """
+        
+
+            student = serializers.ReadOnlyField(
+                source='student.person.full_name'
+            )
+
+            class Meta:
+                """
+                Meta class for Serializer
+                """
+
+                model = swapper.load_model('student_biodata', class_name)
+                exclude = ('datetime_created','datetime_modified',)
+        return Serializer
 
 for key in serializer_dict:
     serializer_dict[key] = return_serializer(key)

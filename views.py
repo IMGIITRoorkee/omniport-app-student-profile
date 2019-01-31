@@ -15,7 +15,7 @@ from kernel.permissions.has_role import get_has_role
 from student_profile.serializers.generic_serializers import (
     serializer_dict,
 )
-from student_profile.serializers.social_link import SocialLinkSerializer
+from kernel.serializers.generics.social_information import SocialLinkSerializer
 from kernel.models.generics.social_information import SocialLink
 from student_profile.permissions.is_student import IsStudent
 
@@ -88,7 +88,7 @@ def return_viewset(class_name):
                     options.remove(option)
             print(options)
             print(student)
-            objects = Model.objects.order_by(*options).filter(student=student, )
+            objects = Model.objects.order_by(*options).filter(student=student,visibility=True )
             print(objects)
             return Response(self.get_serializer(objects, many=True).data)
 

@@ -1,8 +1,10 @@
 import swapper
+
 from django.db import transaction
 from django.db.models import FieldDoesNotExist
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.datastructures import MultiValueDictKeyError
+
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
@@ -12,46 +14,38 @@ from rest_framework.parsers import MultiPartParser
 
 from kernel.managers.get_role import get_role
 from kernel.permissions.has_role import get_has_role
-from student_profile.serializers.generic_serializers import (
-    serializer_dict,
-)
 from kernel.serializers.generics.social_information import SocialLinkSerializer
 from kernel.models.generics.social_information import SocialLink
+
 from student_profile.permissions.is_student import IsStudent
+from student_profile.serializers.generic_serializers import common_dict
 
-viewset_dict = {
-    'CurrentEducation': None,
-    'PreviousEducation': None,
-    'Achievement': None,
-    'Experience': None,
-    'Position': None,
-    'Project': None,
-    'Interest': None,
-    'Skill': None,
-    'Profile': None,
-    'Book': None,
-    'Paper': None,
-    'Referee': None
-}
-
+models = {}
+for key in common_dict:
+    models[key] = swapper.load_model('student_biodata', key)
 
 def return_viewset(class_name):
+    """
+    A generic function used to generate viewsets for every model.
+    """
+
     class Viewset(ModelViewSet):
         """
         API endpoint that allows models to be viewed or edited.
         """
-        serializer_class = serializer_dict[class_name]
+
+        serializer_class = common_dict[class_name]["serializer"]
         permission_classes = (get_has_role('Student'), )
         pagination_class = None
         filter_backends = tuple()
 
         def get_queryset(self):
-            Model = swapper.load_model('student_biodata', class_name)
+            Model = models[class_name]
             try:
                 student = get_role(self.request.person, 'Student')
             except:
                 return []
-            options = ['priority','semester_number', 'start_date', 'id']
+            options = ['priority', 'semester',  'year', 'start_date', 'id']
             for option in options[:]:
                 try:
                     Model._meta.get_field(option)
@@ -64,6 +58,7 @@ def return_viewset(class_name):
             modifying perform_create for all the views to get Student
             instance from request
             """
+
             student = get_role(self.request.person, 'Student')
             serializer.save(student=student)
 
@@ -72,22 +67,22 @@ def return_viewset(class_name):
             """
             providing an open endpoint fot showing the data for normal users
             """
-            Model = swapper.load_model('student_biodata', class_name)
-            Profile = swapper.load_model('student_biodata', 'Profile')
+
+            Model = models[class_name]
+            Profile = models['Profile'] 
             profile = None
+
             try:
                 profile = Profile.objects.get(handle=pk)
             except ObjectDoesNotExist:
                 return Response(status=404,)
             student = profile.student
-            options = ['priority','semester_number', 'start_date', 'id']
+            options = ['priority','semester', 'start_date', 'id']
             for option in options[:]:
                 try:
                     Model._meta.get_field(option)
                 except FieldDoesNotExist:
                     options.remove(option)
-            print(options)
-            print(student)
             objects = Model.objects.order_by(*options).filter(student=student,visibility=True )
             print(objects)
             return Response(self.get_serializer(objects, many=True).data)
@@ -95,14 +90,11 @@ def return_viewset(class_name):
     return Viewset
 
 
-for key in serializer_dict:
-    viewset_dict[key] = return_viewset(key)
-
-
 class SocialLinkViewSet(ModelViewSet):
     """
     API endpoint that allows SocialLink Model to be viewed or edited.
     """
+
     permission_classes = (get_has_role('Student'), )
     serializer_class = SocialLinkSerializer
     pagination_class = None
@@ -126,6 +118,7 @@ class SocialLinkViewSet(ModelViewSet):
         modifying perform_create for all the views to get Student
         instance from request
         """
+
         person = self.request.person
         link_instance = serializer.save()
         si, created = person.social_information.get_or_create()
@@ -136,15 +129,16 @@ class SocialLinkViewSet(ModelViewSet):
         """
         providing an open endpoint fot showing the data for normal users
         """
+
         Model = SocialLink
-        Profile = swapper.load_model('student_biodata', 'Profile')
+        Profile = models['Profile']
         profile = None
         try:
             profile = Profile.objects.get(handle=pk)
         except ObjectDoesNotExist:
             return Response(status=404,)
         student = profile.student
-        options = ['priority','semester_number', 'start_date', 'id']
+        options = ['priority','semester', 'start_date', 'id']
         for option in options[:]:
             try:
                 Model._meta.get_field(option)
@@ -153,23 +147,31 @@ class SocialLinkViewSet(ModelViewSet):
         objects = student.person.social_information.all()[0].links
         return Response(SocialLinkSerializer(objects, many=True).data)
 
+for key in common_dict:
+    common_dict[key]["viewset"] = return_viewset(key)
 
 class ProfileViewset(ModelViewSet):
     """
     API endpoint that allows models to be viewed or edited.
     """
-    serializer_class = serializer_dict['Profile']
+
+    serializer_class = common_dict['Profile']['serializer']
     permission_classes = (get_has_role('Student'), )
     pagination_class = None
     filter_backends = tuple()
 
     def get_queryset(self):
-        Model = swapper.load_model('student_biodata', 'Profile')
+        Model = models['Profile']
         try:
             student = get_role(self.request.person, 'Student')
         except:
             return []
-        return Model.objects.order_by('-id').filter(student=student)
+        profile = Model.objects.order_by('-id').filter(student=student)
+        if len(profile) == 0:
+            profile = Model.objects.create(student=student, handle=student.enrolment_number, description="Student at IITR")
+            profile.save()
+            return [profile]
+        return profile
     
     def create(self, request, *args, **kwargs):
         """
@@ -202,6 +204,7 @@ class ProfileViewset(ModelViewSet):
         modifying perform_create for all the views to get Student
         instance from request
         """
+
         student = get_role(self.request.person, 'Student')
         serializer.save(student=student)
 
@@ -209,6 +212,7 @@ class ProfileViewset(ModelViewSet):
         """
         modifying update function to change image field to null in case of deleting the profile image
         """
+
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -224,7 +228,6 @@ class ProfileViewset(ModelViewSet):
             img_file = request.data['image']
             person = request.person
             if img_file is None or img_file == "null":
-                print('yay')
                 person.display_picture = None
                 person.save()
             else:
@@ -254,8 +257,9 @@ class ProfileViewset(ModelViewSet):
         """
         A view to get the profile information without the authentication
         """
+
         try:
-            profile = swapper.load_model('student_biodata', 'Profile').objects.get(handle=pk)
+            profile = models['Profile'].objects.get(handle=pk)
             data = self.get_serializer(profile).data
             try:
                 data['displayPicture'] = profile.student.person.display_picture.url
@@ -265,9 +269,9 @@ class ProfileViewset(ModelViewSet):
         except ObjectDoesNotExist:
             return Response(status=404,)
 
-
         return Response(data)
-viewset_dict['Profile'] = ProfileViewset
+        
+common_dict['Profile']["viewset"] = ProfileViewset
 
 
 class DragAndDropView(APIView):
@@ -283,10 +287,10 @@ class DragAndDropView(APIView):
     def post(self, request):
         data = request.data
         student = get_role(self.request.person, 'Student')
-        modelName = data['model']
-        Model = swapper.load_model('student_biodata', modelName)
+        model_name = data['model']
+        Model = models[model_name]
         objects = Model.objects.order_by('id').filter(student=student)
-        serializer = serializer_dict[modelName]
+        serializer = common_dict[model_name]['serializer']
         priority_array = data['order']
         if(len(priority_array) == len(objects)):
             order = dict()
@@ -296,4 +300,3 @@ class DragAndDropView(APIView):
                 obj.priority = order[obj.id]
                 obj.save()
         return Response(serializer(objects.order_by('priority'), many=True).data)
-   

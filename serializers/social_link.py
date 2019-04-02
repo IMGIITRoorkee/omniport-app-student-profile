@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from kernel.models.generics.social_information import SocialLink
 
-
+#Not used
 class SocialLinkSerializer(serializers.ModelSerializer):
     """
     Serializer for SocialLink class

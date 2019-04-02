@@ -1,6 +1,3 @@
-from django.apps import AppConfig
+from configuration.utils.app_config_class import get_app_config_class
 
-
-class StudentProfileConfig(AppConfig):
-    name = 'student_profile'
-    verbose_name = 'Student profile'
+Config = get_app_config_class(__file__)

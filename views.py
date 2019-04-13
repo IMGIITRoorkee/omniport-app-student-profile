@@ -65,7 +65,7 @@ def return_viewset(class_name):
         @action(detail=True, methods=['get'], permission_classes=[])
         def handle(self, request, pk=None):
             """
-            providing an open endpoint fot showing the data for normal users
+            providing an open endpoint for showing the data for normal users
             """
 
             Model = models[class_name]

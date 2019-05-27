@@ -1,6 +1,7 @@
 import swapper
 from rest_framework import serializers
-from kernel.models.generics.contact_information import ContactInformation
+
+from formula_one.models.generics.contact_information import ContactInformation
 
 # This serializer will be used in Reference model
 

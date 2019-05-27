@@ -12,10 +12,10 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 
+from formula_one.models.generics.social_information import SocialLink
+from formula_one.serializers.generics.social_information import SocialLinkSerializer
 from kernel.managers.get_role import get_role
 from kernel.permissions.has_role import get_has_role
-from kernel.serializers.generics.social_information import SocialLinkSerializer
-from kernel.models.generics.social_information import SocialLink
 
 from student_profile.permissions.is_student import IsStudent
 from student_profile.serializers.generic_serializers import common_dict

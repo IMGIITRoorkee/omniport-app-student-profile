@@ -9,6 +9,7 @@ class ContactInformationSerializer(serializers.ModelSerializer):
     """
     Serializer class for ContactInformation model
     """
+
     class Meta:
         model = ContactInformation
         fields = ('primary_phone_number', 'secondary_phone_number', 'email_address', 'email_address_verified', 'institute_webmail_address', )
@@ -18,10 +19,13 @@ class RefereeSerializer(serializers.ModelSerializer):
     """
     Serializer class for Referee model
     """
+
     contact_information = ContactInformationSerializer(many=True,required=False)
     student = serializers.ReadOnlyField(
         source='student.person.full_name'
     )
+    verified = serializers.ReadOnlyField()
+
     class Meta:
         model = swapper.load_model('student_biodata','Referee')
         fields = '__all__'

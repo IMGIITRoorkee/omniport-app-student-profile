@@ -20,7 +20,7 @@ common_dict = {
 }
 
 models = {}
-for key in common_dict:
+for key in common_dict.keys():
     models[key] = swapper.load_model('student_biodata', key)
 
 def return_serializer(class_name):
@@ -29,48 +29,26 @@ def return_serializer(class_name):
     :param class_name: the class whose serializer is being generated
     """
 
-    if (class_name == "CurrentEducation" or class_name == "PreviousEducation"):
+    class Serializer(serializers.ModelSerializer):
+        """
+        Serializer for given class name
+        """
 
-        class Serializer(serializers.ModelSerializer):
+        student = serializers.ReadOnlyField(
+            source='student.person.full_name'
+        )
+
+        verified = serializers.ReadOnlyField()
+
+        class Meta:
             """
-            Serializer for given class name
-            """
-        
-            student = serializers.ReadOnlyField(
-                source='student.person.full_name'
-            )
-
-            verified = serializers.ReadOnlyField()
-
-            class Meta:
-                """
-                Meta class for Serializer
-                """
-
-                model = models[class_name]
-                exclude = ('datetime_created','datetime_modified',)
-
-        return Serializer
-
-    else:
-        class Serializer(serializers.ModelSerializer):
-            """
-            Serializer for given class name
+            Meta class for Serializer
             """
 
-            student = serializers.ReadOnlyField(
-                source='student.person.full_name'
-            )
+            model = models[class_name]
+            exclude = ('datetime_created','datetime_modified',)
 
-            class Meta:
-                """
-                Meta class for Serializer
-                """
-
-                model = models[class_name]
-                exclude = ('datetime_created','datetime_modified',)
-        
-        return Serializer
+    return Serializer
 
 for key in common_dict:
     common_dict[key]["serializer"] = return_serializer(key)

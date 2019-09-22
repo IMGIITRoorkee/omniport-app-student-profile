@@ -84,7 +84,6 @@ def return_viewset(class_name):
                 except FieldDoesNotExist:
                     options.remove(option)
             objects = Model.objects.order_by(*options).filter(student=student,visibility=True )
-            print(objects)
             return Response(self.get_serializer(objects, many=True).data)
 
     return Viewset

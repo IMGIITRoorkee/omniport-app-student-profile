@@ -40,6 +40,16 @@ def return_serializer(class_name):
 
         verified = serializers.ReadOnlyField()
 
+        def update(self, instance, validated_data):
+            verified = instance.verified
+            if verified is True:
+                if hasattr(instance, 'description'):
+                    instance.description = validated_data.get(
+                        'description', instance.description)
+                    instance.save()
+                return instance
+            return super().update(instance, validated_data)
+
         class Meta:
             """
             Meta class for Serializer

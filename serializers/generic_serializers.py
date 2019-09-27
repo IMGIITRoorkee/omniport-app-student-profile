@@ -2,26 +2,27 @@ import swapper
 
 from rest_framework import serializers
 
-# Common Dictionary storing serializers and viewsets of similar models 
+# Common Dictionary storing serializers and viewsets of similar models
 
 common_dict = {
-    'Profile': {'serializer': None,'viewset': None},
-    'Interest': {'serializer': None,'viewset': None},
-    'Achievement': {'serializer': None,'viewset': None},
-    'CurrentEducation': {'serializer': None,'viewset': None},
-    'PreviousEducation': {'serializer': None,'viewset': None},
-    'Position': {'serializer': None,'viewset': None},
-    'Experience': {'serializer': None,'viewset': None},
-    'Project': {'serializer': None,'viewset': None},
-    'Book': {'serializer': None,'viewset': None},
-    'Paper': {'serializer': None,'viewset': None},
-    'Referee': {'serializer': None,'viewset': None},
-    'Skill': {'serializer': None,'viewset': None},
+    'Profile': {'serializer': None, 'viewset': None},
+    'Interest': {'serializer': None, 'viewset': None},
+    'Achievement': {'serializer': None, 'viewset': None},
+    'CurrentEducation': {'serializer': None, 'viewset': None},
+    'PreviousEducation': {'serializer': None, 'viewset': None},
+    'Position': {'serializer': None, 'viewset': None},
+    'Experience': {'serializer': None, 'viewset': None},
+    'Project': {'serializer': None, 'viewset': None},
+    'Book': {'serializer': None, 'viewset': None},
+    'Paper': {'serializer': None, 'viewset': None},
+    'Referee': {'serializer': None, 'viewset': None},
+    'Skill': {'serializer': None, 'viewset': None},
 }
 
 models = {}
 for key in common_dict.keys():
     models[key] = swapper.load_model('student_biodata', key)
+
 
 def return_serializer(class_name):
     """
@@ -38,7 +39,13 @@ def return_serializer(class_name):
             source='student.person.full_name'
         )
 
-        verified = serializers.ReadOnlyField()
+        # verified = serializers.ReadOnlyField()
+
+        def create(self, validated_data):
+            verified = validated_data.get('verified', False)
+            if verified is True:
+                validated_data.pop('verified')
+            return super().create(validated_data)
 
         def update(self, instance, validated_data):
             verified = instance.verified
@@ -46,8 +53,13 @@ def return_serializer(class_name):
                 if hasattr(instance, 'description'):
                     instance.description = validated_data.get(
                         'description', instance.description)
-                    instance.save()
+                new_verified = validated_data.get('verified', False)
+                instance.verified = new_verified
+                instance.save()
                 return instance
+            new_verified = validated_data.get('verified', False)
+            if new_verified is True:
+                validated_data.pop('verified')
             return super().update(instance, validated_data)
 
         class Meta:
@@ -56,9 +68,10 @@ def return_serializer(class_name):
             """
 
             model = models[class_name]
-            exclude = ('datetime_created','datetime_modified',)
+            exclude = ('datetime_created', 'datetime_modified',)
 
     return Serializer
+
 
 for key in common_dict:
     common_dict[key]["serializer"] = return_serializer(key)

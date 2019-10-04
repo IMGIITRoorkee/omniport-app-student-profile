@@ -42,25 +42,50 @@ def return_serializer(class_name):
         # verified = serializers.ReadOnlyField()
 
         def create(self, validated_data):
-            verified = validated_data.get('verified', False)
+
+            # For previous education
+            percentage = validated_data.get('percentage', None)
+            if percentage != None:
+                validated_data['is_percentage'] = True
+            else:
+                validated_data['is_percentage'] = True
+
+            # For allowing unverification of entity by students
+            # and allowing change in description only if verified already
+            verified = validated_data.get('verified', None)
             if verified is True:
                 validated_data.pop('verified')
+
             return super().create(validated_data)
 
         def update(self, instance, validated_data):
+
+            # For previous education
+            if instance.__class__.__name__ == "PreviousEducation":
+                validated_data.pop('is_percentage', None)
+                percentage = validated_data.get('percentage', None)
+                if percentage != None:
+                    instance.is_percentage = True
+                else:
+                    instance.is_percentage = False
+
+            # For allowing unverification of entity by students
+            # and allowing change in description only if verified already
             verified = instance.verified
             if verified is True:
                 if hasattr(instance, 'description'):
                     instance.description = validated_data.get(
                         'description', instance.description)
-                new_verified = validated_data.get('verified', False)
+                new_verified = validated_data.get(
+                    'verified', instance.verified)
                 instance.verified = new_verified
                 instance.save()
                 return instance
-            new_verified = validated_data.get('verified', False)
-            if new_verified is True:
-                validated_data.pop('verified')
-            return super().update(instance, validated_data)
+            else:
+                new_verified = validated_data.get('verified', False)
+                if new_verified is True:
+                    validated_data.pop('verified')
+                return super().update(instance, validated_data)
 
         class Meta:
             """

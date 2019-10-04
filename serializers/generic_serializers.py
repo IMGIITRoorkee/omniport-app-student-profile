@@ -32,7 +32,7 @@ def return_serializer(class_name):
 
     class Serializer(serializers.ModelSerializer):
         """
-        Serializer for given class name
+        Serializer class for given class name
         """
 
         student = serializers.ReadOnlyField(

@@ -14,7 +14,7 @@ class IsStudent(permissions.BasePermission):
         """
         Permission to use Faculty App views
         """
-        
+
         Student = swapper.load_model('kernel', 'Student')
         try:
             student = get_role(request.person, 'Student')
@@ -27,14 +27,10 @@ class IsStudent(permissions.BasePermission):
         Permission to check whether the object handled by the student 
         belongs to the faculty member
         """
-        
+
         Student = swapper.load_model('kernel', 'Student')
         student = get_role(request.person, 'Student')
         if obj.student == student:
             return True
         else:
             return False
-
-
-
-

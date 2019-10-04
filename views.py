@@ -24,6 +24,7 @@ models = {}
 for key in common_dict:
     models[key] = swapper.load_model('student_biodata', key)
 
+
 def return_viewset(class_name):
     """
     A generic function used to generate viewsets for every model.
@@ -69,7 +70,7 @@ def return_viewset(class_name):
             """
 
             Model = models[class_name]
-            Profile = models['Profile'] 
+            Profile = models['Profile']
             profile = None
 
             try:
@@ -77,13 +78,14 @@ def return_viewset(class_name):
             except ObjectDoesNotExist:
                 return Response(status=404,)
             student = profile.student
-            options = ['priority','semester', 'start_date', 'id']
+            options = ['priority', 'semester', 'start_date', 'id']
             for option in options[:]:
                 try:
                     Model._meta.get_field(option)
                 except FieldDoesNotExist:
                     options.remove(option)
-            objects = Model.objects.order_by(*options).filter(student=student,visibility=True )
+            objects = Model.objects.order_by(
+                *options).filter(student=student, visibility=True)
             return Response(self.get_serializer(objects, many=True).data)
 
     return Viewset
@@ -122,7 +124,7 @@ class SocialLinkViewSet(ModelViewSet):
         link_instance = serializer.save()
         si, created = person.social_information.get_or_create()
         person.social_information.all()[0].links.add(link_instance)
-    
+
     @action(detail=True, methods=['get'], permission_classes=[])
     def handle(self, request, pk=None):
         """
@@ -137,7 +139,7 @@ class SocialLinkViewSet(ModelViewSet):
         except ObjectDoesNotExist:
             return Response(status=404,)
         student = profile.student
-        options = ['priority','semester', 'start_date', 'id']
+        options = ['priority', 'semester', 'start_date', 'id']
         for option in options[:]:
             try:
                 Model._meta.get_field(option)
@@ -146,8 +148,10 @@ class SocialLinkViewSet(ModelViewSet):
         objects = student.person.social_information.all()[0].links
         return Response(SocialLinkSerializer(objects, many=True).data)
 
+
 for key in common_dict:
     common_dict[key]["viewset"] = return_viewset(key)
+
 
 class ProfileViewset(ModelViewSet):
     """
@@ -167,11 +171,12 @@ class ProfileViewset(ModelViewSet):
             return []
         profile = Model.objects.order_by('-id').filter(student=student)
         if len(profile) == 0:
-            profile = Model.objects.create(student=student, handle=student.enrolment_number, description="Student at IITR")
+            profile = Model.objects.create(
+                student=student, handle=student.enrolment_number, description="Student at IITR")
             profile.save()
             return [profile]
         return profile
-    
+
     def create(self, request, *args, **kwargs):
         """
         Modifying create method to add functionality of adding profile image
@@ -181,23 +186,23 @@ class ProfileViewset(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         data = serializer.data
-        person = request.person 
-        try: 
+        person = request.person
+        try:
             img_file = request.data['image']
             if img_file is None or img_file == "null":
                 person.display_picture = None
-                person.save()  
+                person.save()
             else:
                 person.display_picture.save(img_file.name, img_file, save=True)
-        except MultiValueDictKeyError: 
+        except MultiValueDictKeyError:
             pass
         try:
-            data['displayPicture'] = request.person.display_picture.url       
+            data['displayPicture'] = request.person.display_picture.url
         except ValueError:
             data['displayPicture'] = None
         headers = self.get_success_headers(serializer.data)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
-    
+
     def perform_create(self, serializer):
         """
         modifying perform_create for all the views to get Student
@@ -214,7 +219,8 @@ class ProfileViewset(ModelViewSet):
 
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         parser_class = (MultiPartParser, )
         self.perform_update(serializer)
@@ -234,7 +240,7 @@ class ProfileViewset(ModelViewSet):
         except MultiValueDictKeyError:
             pass
         try:
-            data['displayPicture'] = request.person.display_picture.url       
+            data['displayPicture'] = request.person.display_picture.url
         except ValueError:
             data['displayPicture'] = None
         return Response(data)
@@ -269,7 +275,8 @@ class ProfileViewset(ModelViewSet):
             return Response(status=404,)
 
         return Response(data)
-        
+
+
 common_dict['Profile']["viewset"] = ProfileViewset
 
 

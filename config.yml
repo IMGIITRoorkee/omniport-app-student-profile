@@ -6,8 +6,8 @@ baseUrls:
   ws: student_profile/
 acceptables:
   roles:
-  - name: Student
-    activeStatuses:
-    - IS_ACTIVE
-    - HAS_BEEN_ACTIVE
+    - name: Student
+      activeStatuses:
+        - IS_ACTIVE
+        - HAS_BEEN_ACTIVE
 isApi: true

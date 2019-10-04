@@ -2,7 +2,9 @@ from rest_framework import serializers
 
 from formula_one.models.generics.social_information import SocialLink
 
-#Not used
+# Not used
+
+
 class SocialLinkSerializer(serializers.ModelSerializer):
     """
     Serializer for SocialLink class
@@ -14,4 +16,4 @@ class SocialLinkSerializer(serializers.ModelSerializer):
         """
 
         model = SocialLink
-        exclude = ('datetime_created','datetime_modified')
+        exclude = ('datetime_created', 'datetime_modified')

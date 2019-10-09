@@ -63,6 +63,15 @@ def return_viewset(class_name):
             student = get_role(self.request.person, 'Student')
             serializer.save(student=student)
 
+        def destroy(self, request, *args, **kwargs):
+            instance = self.get_object()
+            class_name = instance.__class__.__name__
+            if class_name == "PreviousEducation" or class_name == "CurrentEducation":
+                if instance.verified is True:
+                    return Response("Cannot delete verified education instances", status.HTTP_403_FORBIDDEN)
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
         @action(detail=True, methods=['get'], permission_classes=[])
         def handle(self, request, pk=None):
             """

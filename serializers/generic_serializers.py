@@ -44,11 +44,12 @@ def return_serializer(class_name):
         def create(self, validated_data):
 
             # For previous education
-            percentage = validated_data.get('percentage', None)
-            if percentage != None:
-                validated_data['is_percentage'] = True
-            else:
-                validated_data['is_percentage'] = True
+            if class_name == 'PreviousEducation':
+                percentage = validated_data.get('percentage', None)
+                if percentage != None:
+                    validated_data['is_percentage'] = True
+                else:
+                    validated_data['is_percentage'] = False
 
             # For allowing unverification of entity by students
             # and allowing change in description only if verified already

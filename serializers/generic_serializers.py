@@ -72,7 +72,7 @@ def return_serializer(class_name):
 
             # For allowing unverification of entity by students
             # and allowing change in description only if verified already
-            verified = instance.verified
+            verified = getattr(instance, 'verified', False)
             if verified is True:
                 if hasattr(instance, 'description'):
                     instance.description = validated_data.get(

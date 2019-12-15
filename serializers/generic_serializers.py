@@ -35,11 +35,15 @@ def return_serializer(class_name):
         Serializer class for given class name
         """
 
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            if class_name == "PreviousEducation":
+                self.fields['graduation_display'] = serializers.ReadOnlyField(
+                    source='get_graduation_display')
+
         student = serializers.ReadOnlyField(
             source='student.person.full_name'
         )
-
-        # verified = serializers.ReadOnlyField()
 
         def create(self, validated_data):
 

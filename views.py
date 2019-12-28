@@ -1,4 +1,5 @@
 import swapper
+import logging
 
 from django.db import transaction
 from django.db.models import FieldDoesNotExist
@@ -19,6 +20,8 @@ from kernel.permissions.has_role import get_has_role
 
 from student_profile.permissions.is_student import IsStudent
 from student_profile.serializers.generic_serializers import common_dict
+
+logger = logging.getLogger('student_profile')
 
 models = {}
 for key in common_dict:
@@ -204,7 +207,8 @@ class ProfileViewset(ModelViewSet):
             else:
                 person.display_picture.save(img_file.name, img_file, save=True)
         except MultiValueDictKeyError:
-            pass
+            logger.info('MultiValueDictKeyError has occurred \
+                when user tried to upload profile image')
         try:
             data['displayPicture'] = request.person.display_picture.url
         except ValueError:
@@ -247,7 +251,8 @@ class ProfileViewset(ModelViewSet):
             else:
                 person.display_picture.save(img_file.name, img_file, save=True)
         except MultiValueDictKeyError:
-            pass
+            logger.info('MultiValueDictKeyError has occurred \
+                when user tried to upload profile image')
         try:
             data['displayPicture'] = request.person.display_picture.url
         except ValueError:

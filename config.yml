@@ -5,6 +5,7 @@ description: A student's personal profile page
 baseUrls:
   http: student_profile/
   ws: student_profile/
+  static: student_profile/
 acceptables:
   roles:
     - name: Student

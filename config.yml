@@ -1,6 +1,6 @@
 nomenclature:
   name: student_profile
-  verboseName: StudentProfile
+  verboseName: Student Profile
 description: A student's personal profile page
 baseUrls:
   http: student_profile/

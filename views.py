@@ -157,8 +157,9 @@ class SocialLinkViewSet(ModelViewSet):
                 Model._meta.get_field(option)
             except FieldDoesNotExist:
                 options.remove(option)
-        objects = student.person.social_information.all()[0].links
-        return Response(SocialLinkSerializer(objects, many=True).data)
+        social_info = student.person.social_information.first()
+        links = social_info.links if social_info else list()
+        return Response(SocialLinkSerializer(links, many=True).data)
 
 
 for key in common_dict:

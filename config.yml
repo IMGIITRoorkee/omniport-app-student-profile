@@ -1,7 +1,7 @@
 nomenclature:
   name: student_profile
-  verboseName: Student Profile
-description: A student's personal profile page
+  verboseName: SHP
+description: A student's official profile page
 baseUrls:
   http: student_profile/
   ws: student_profile/

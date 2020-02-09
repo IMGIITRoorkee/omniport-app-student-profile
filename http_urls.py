@@ -13,10 +13,10 @@ for model in common_dict:
     router.register(
         inflection.underscore(model),
         common_dict[model]["viewset"],
-        base_name=model,
+        basename=model,
     )
 
-router.register(r'social_link', SocialLinkViewSet, base_name="SocialLink")
+router.register(r'social_link',SocialLinkViewSet,basename="SocialLink")
 
 urlpatterns = [
     url(r'rearrange', DragAndDropView.as_view()),

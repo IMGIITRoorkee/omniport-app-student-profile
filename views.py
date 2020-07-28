@@ -1,9 +1,9 @@
 import swapper
 import logging
 
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import FieldDoesNotExist
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils.datastructures import MultiValueDictKeyError
 
 from rest_framework.views import APIView
@@ -57,6 +57,24 @@ def return_viewset(class_name):
                     options.remove(option)
             return Model.objects.order_by(*options).filter(student=student)
 
+        def create(self, request, *args, **kwargs):
+            """
+            Modify create method to catch errors
+            """
+
+            try:
+                return super().create(request, *args, **kwargs)
+            except IntegrityError as error:
+                return Response(
+                    {'Fatal error': [error.__cause__.diag.message_detail]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except ValidationError as error:
+                return Response(
+                    error.message_dict,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         def perform_create(self, serializer):
             """
             modifying perform_create for all the views to get Student
@@ -65,6 +83,24 @@ def return_viewset(class_name):
 
             student = get_role(self.request.person, 'Student')
             serializer.save(student=student)
+
+        def update(self, request, *args, **kwargs):
+            """
+            Modify update method to catch errors
+            """
+
+            try:
+                return super().update(request, *args, **kwargs)
+            except IntegrityError as error:
+                return Response(
+                    {'Fatal error': [error.__cause__.diag.message_detail]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except ValidationError as error:
+                return Response(
+                    error.message_dict,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         def destroy(self, request, *args, **kwargs):
             instance = self.get_object()

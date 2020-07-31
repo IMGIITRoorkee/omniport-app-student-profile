@@ -57,23 +57,42 @@ def return_viewset(class_name):
                     options.remove(option)
             return Model.objects.order_by(*options).filter(student=student)
 
+        def exception_handler(func):
+            """
+            Decorator to add exception handling to create and update methods.
+            :param func: function to apply this decorator over
+
+            :return: a function which raises an error if the passed function
+            raises an error
+            """
+
+            def raise_error(*args, **kwargs):
+                """
+                Wrapper function to raise error
+                """
+    
+                try:
+                    return func(*args, **kwargs)
+                except IntegrityError as error:
+                    return Response(
+                        {'Fatal error': [error.__cause__.diag.message_detail]},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                except ValidationError as error:
+                    return Response(
+                        error.message_dict,
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            return raise_error
+
+        @exception_handler
         def create(self, request, *args, **kwargs):
             """
             Modify create method to catch errors
             """
 
-            try:
-                return super().create(request, *args, **kwargs)
-            except IntegrityError as error:
-                return Response(
-                    {'Fatal error': [error.__cause__.diag.message_detail]},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            except ValidationError as error:
-                return Response(
-                    error.message_dict,
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            return super().create(request, *args, **kwargs)
 
         def perform_create(self, serializer):
             """
@@ -84,23 +103,13 @@ def return_viewset(class_name):
             student = get_role(self.request.person, 'Student')
             serializer.save(student=student)
 
+        @exception_handler
         def update(self, request, *args, **kwargs):
             """
             Modify update method to catch errors
             """
 
-            try:
-                return super().update(request, *args, **kwargs)
-            except IntegrityError as error:
-                return Response(
-                    {'Fatal error': [error.__cause__.diag.message_detail]},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            except ValidationError as error:
-                return Response(
-                    error.message_dict,
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            return super().update(request, *args, **kwargs)
 
         def destroy(self, request, *args, **kwargs):
             instance = self.get_object()

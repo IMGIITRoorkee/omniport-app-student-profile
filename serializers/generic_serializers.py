@@ -48,11 +48,11 @@ def return_serializer(class_name):
         def create(self, validated_data):
 
             # For previous education
+            # If percentage not specified, set is_percentage as False
+            # Else use original value
             if class_name == 'PreviousEducation':
                 percentage = validated_data.get('percentage', None)
-                if percentage != None:
-                    validated_data['is_percentage'] = True
-                else:
+                if percentage is None:
                     validated_data['is_percentage'] = False
 
             # For allowing unverification of entity by students
@@ -66,13 +66,14 @@ def return_serializer(class_name):
         def update(self, instance, validated_data):
 
             # For previous education
+            # Same as done in create method
             if instance.__class__.__name__ == "PreviousEducation":
-                validated_data.pop('is_percentage', None)
+                is_percentage = validated_data.get('is_percentage', False)
                 percentage = validated_data.get('percentage', None)
-                if percentage != None:
-                    instance.is_percentage = True
-                else:
+                if percentage is None:
                     instance.is_percentage = False
+                else:
+                    instance.is_percentage = is_percentage
 
             # For allowing unverification of entity by students
             # and allowing change in description only if verified already

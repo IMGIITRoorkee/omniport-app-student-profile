@@ -48,12 +48,28 @@ def return_serializer(class_name):
         def create(self, validated_data):
 
             # For previous education
+            # If percentage not specified, set is_percentage as False
+            # Else use original value
             if class_name == 'PreviousEducation':
+                cgpa = validated_data.get('cgpa', None)
                 percentage = validated_data.get('percentage', None)
-                if percentage != None:
-                    validated_data['is_percentage'] = True
-                else:
+                # cgpa exists, percentage doesn't exist
+                if percentage is None and cgpa is not None:
                     validated_data['is_percentage'] = False
+                # percentage exists, cgpa doesn't exist
+                elif cgpa is None and percentage is not None:
+                    validated_data['is_percentage'] = True
+                # both exists
+                elif cgpa is not None and percentage is not None:
+                    pass
+                # both doesn't exists
+                else:
+                    raise serializers.ValidationError({
+                        'Error': [
+                            'Both CGPA and Percentage cannot be blank '
+                            'simultaneously.'
+                        ]
+                    })
 
             # For allowing unverification of entity by students
             # and allowing change in description only if verified already
@@ -66,13 +82,29 @@ def return_serializer(class_name):
         def update(self, instance, validated_data):
 
             # For previous education
+            # Same as done in create method
             if instance.__class__.__name__ == "PreviousEducation":
-                validated_data.pop('is_percentage', None)
-                percentage = validated_data.get('percentage', None)
-                if percentage != None:
-                    instance.is_percentage = True
-                else:
+                cgpa = validated_data.get('cgpa', instance.cgpa)
+                is_percentage = validated_data.get(
+                    'is_percentage', instance.is_percentage)
+                percentage = validated_data.get(
+                    'percentage', instance.percentage)
+                # cgpa exists, percentage doesn't exists
+                if percentage is None and cgpa is not None:
                     instance.is_percentage = False
+                # percentage exists, cgpa doesn't exist
+                elif cgpa is None and percentage is not None:
+                    instance.is_percentage = True
+                # both exists
+                elif cgpa is not None and percentage is not None:
+                    instance.is_percentage = is_percentage
+                else:
+                    raise serializers.ValidationError({
+                        'Error': [
+                            'Both CGPA and Percentage cannot be blank '
+                            'simultaneously.'
+                        ]
+                    })
 
             # For allowing unverification of entity by students
             # and allowing change in description only if verified already

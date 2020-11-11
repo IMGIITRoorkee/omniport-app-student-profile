@@ -21,7 +21,11 @@ from kernel.permissions.has_role import get_has_role
 
 from student_profile.permissions.is_student import IsStudent
 from student_profile.serializers.generic_serializers import common_dict
+<<<<<<< HEAD
 from student_profile.serializers.student_serializer import StudentSearchSerializer
+=======
+from student_profile.tasks.publish_page import publish_page
+>>>>>>> Add queue for shp publish
 
 logger = logging.getLogger('student_profile')
 
@@ -363,6 +367,20 @@ class StudentSearchList(generics.ListAPIView):
 
         result = list(chain(students))
         return result
+
+
+class PublishPageView(APIView):
+    """
+    API endpoint to publish a preview page
+    """
+
+    permission_classes = (get_has_role('Student'), )
+
+    def post(self, request):
+        data = request.data
+        enrollment_no = data['enrollment_no']
+        full_name = data['full_name']
+        publish_page.delay(full_name, enrollment_no)
 
 
 class DragAndDropView(APIView):

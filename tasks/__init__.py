@@ -1,0 +1,1 @@
+from student_profile.tasks.publish_page import publish_page

@@ -381,6 +381,12 @@ class PublishPageView(APIView):
         enrollment_no = data['enrollment_no']
         full_name = data['full_name']
         publish_page.delay(full_name, enrollment_no)
+        return Response(
+            {
+                "message": "Successfully added to publish queue"
+            },
+            status=200 
+        )
 
 
 class DragAndDropView(APIView):

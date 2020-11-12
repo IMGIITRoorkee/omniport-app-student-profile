@@ -18,6 +18,7 @@ from formula_one.models.generics.social_information import SocialLink
 from formula_one.serializers.generics.social_information import SocialLinkSerializer
 from kernel.managers.get_role import get_role
 from kernel.permissions.has_role import get_has_role
+from omniport.settings.configuration.base import CONFIGURATION
 
 from student_profile.permissions.is_student import IsStudent
 from student_profile.serializers.generic_serializers import common_dict
@@ -375,17 +376,48 @@ class PublishPageView(APIView):
     """
 
     permission_classes = (get_has_role('Student'), )
+    SHP = CONFIGURATION.integrations.get('shp', False)
+
+    def get(self, request):
+        """
+        Returns whether SHP configuration exists or not
+        :return: whether SHP configuration exists or not
+        """
+
+        if self.SHP:
+            attributes = [
+                self.SHP.get('shp_publish_endpoint')
+            ]
+            if all(attributes):
+                return Response(
+                    'SHP configuration detected',
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    (
+                        'SHP falsely configured. Please provide `shp_publish_endpoint` '
+                        'in the configuration'
+                    ),
+                    status=status.HTTP_406_NOT_ACCEPTABLE,
+                )
+        else:
+            return Response(
+                'You probably do not need students page published',
+                status=status.HTTP_404_NOT_FOUND,
+        )
+
 
     def post(self, request):
         data = request.data
         enrollment_no = data['enrollment_no']
         full_name = data['full_name']
-        publish_page.delay(full_name, enrollment_no)
+        shp_endpoint = self.SHP.get('shp_publish_endpoint')
+
+        publish_page.delay(full_name, enrollment_no, shp_endpoint)
         return Response(
-            {
-                "message": "Successfully added to publish queue"
-            },
-            status=200 
+            "Successfully added to publish queue",
+            status=status.HTTP_200_OK, 
         )
 
 

@@ -3,7 +3,7 @@ import logging
 
 from django.db import transaction, IntegrityError
 from django.db.models import FieldDoesNotExist, Q
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, ImproperlyConfigured
 from django.utils.datastructures import MultiValueDictKeyError
 
 from itertools import chain
@@ -22,11 +22,8 @@ from omniport.settings.configuration.base import CONFIGURATION
 
 from student_profile.permissions.is_student import IsStudent
 from student_profile.serializers.generic_serializers import common_dict
-<<<<<<< HEAD
 from student_profile.serializers.student_serializer import StudentSearchSerializer
-=======
 from student_profile.tasks.publish_page import publish_page
->>>>>>> Add queue for shp publish
 
 logger = logging.getLogger('student_profile')
 
@@ -378,47 +375,71 @@ class PublishPageView(APIView):
     permission_classes = (get_has_role('Student'), )
     SHP = CONFIGURATION.integrations.get('shp', False)
 
+    def check_configuration(self):
+        if self.SHP:
+            attributes = [
+                self.SHP.get('shp_publish_endpoint')
+            ]
+            if all(attributes):
+                return True
+            else:
+                raise ImproperlyConfigured
+        else:
+            return False
+
     def get(self, request):
         """
         Returns whether SHP configuration exists or not
         :return: whether SHP configuration exists or not
         """
 
-        if self.SHP:
-            attributes = [
-                self.SHP.get('shp_publish_endpoint')
-            ]
-            if all(attributes):
+        try:
+            is_configured = self.check_configuration()
+            if is_configured:
                 return Response(
                     'SHP configuration detected',
                     status=status.HTTP_200_OK,
                 )
-            else:
-                return Response(
-                    (
-                        'SHP falsely configured. Please provide `shp_publish_endpoint` '
-                        'in the configuration'
-                    ),
-                    status=status.HTTP_406_NOT_ACCEPTABLE,
-                )
-        else:
             return Response(
                 'You probably do not need students page published',
                 status=status.HTTP_404_NOT_FOUND,
-        )
-
+            )
+        except ImproperlyConfigured:
+            return Response(
+                (
+                    'SHP falsely configured. Please provide `shp_publish_endpoint` '
+                    'in the configuration'
+                ),
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
     def post(self, request):
-        data = request.data
-        enrollment_no = data['enrollment_no']
-        full_name = data['full_name']
-        shp_endpoint = self.SHP.get('shp_publish_endpoint')
+        try:
+            is_configured = self.check_configuration()
+        except ImproperlyConfigured:
+            return Response(
+                (
+                    'SHP falsely configured. Please provide `shp_publish_endpoint` '
+                    'in the configuration'
+                ),
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+        if is_configured:
+            data = request.data
+            enrollment_no = data['enrollment_no']
+            full_name = data['full_name']
+            shp_endpoint = self.SHP.get('shp_publish_endpoint')
 
-        publish_page.delay(full_name, enrollment_no, shp_endpoint)
-        return Response(
-            "Successfully added to publish queue",
-            status=status.HTTP_200_OK, 
-        )
+            publish_page.delay(full_name, enrollment_no, shp_endpoint)
+            return Response(
+                "Successfully added to publish queue",
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                'You probably do not need students page published',
+                status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            )
 
 
 class DragAndDropView(APIView):

@@ -10,6 +10,10 @@ celery_app.control.add_consumer('shp_publish', reply=True)
 )
 def publish_page(full_name, enrollment_no, shp_publish_endpoint):
     """
+    :param full_name: Full name of the student.
+    :param enrollment_no: Enrollment no of the student.
+    :param shp_publish_endpoint: Endpoint for SHP publish main worker.
+
     :return: Publishes page with given enrollment_no
     """
 

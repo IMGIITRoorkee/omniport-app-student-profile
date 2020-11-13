@@ -2,7 +2,7 @@ import swapper
 import logging
 
 from django.db import transaction, IntegrityError
-from django.db.models import FieldDoesNotExist
+from django.db.models import FieldDoesNotExist, Q
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils.datastructures import MultiValueDictKeyError
 
@@ -354,17 +354,13 @@ class StudentSearchList(generics.ListAPIView):
 
     def get_queryset(self):
         query = self.request.query_params.get('query', None)
-        search_type = self.request.query_params.get('type', 'name')
 
-        if search_type == 'enrolment_no':
-            students = Student.objects.filter(
-                enrolment_number__icontains=query).order_by('enrolment_number')[:10]
-        elif search_type == 'handle':
-            students = Student.objects.filter(
-                profile__handle__icontains=query).order_by('enrolment_number')[:10]
-        else:
-            students = Student.objects.filter(
-                person__full_name__icontains=query).order_by('enrolment_number')[:10]
+        students = Student.objects.filter(
+            Q(enrolment_number__icontains=query) | 
+            Q(profile__handle__icontains=query) | 
+            Q(person__full_name__icontains=query)
+        ).order_by('enrolment_number')[:10]
+
         result = list(chain(students))
         return result
 

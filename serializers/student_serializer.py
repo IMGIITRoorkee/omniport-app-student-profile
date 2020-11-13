@@ -6,6 +6,7 @@ from omniport.utils import switcher
 Student = swapper.load_model('kernel', 'Student')
 BaseSerializer = switcher.load_serializer('kernel', 'Student')
 
+
 class StudentSearchSerializer(serializers.ModelSerializer):
     """
     Serializer that serializes the Student search query.
@@ -14,12 +15,14 @@ class StudentSearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
 
+
     def to_representation(self, obj):
         if isinstance(obj, Student):
             serializer = StudentSerializer(obj)
         else:
-            raise Exception("No match found.")
+            raise Exception('No match found')
         return serializer.data
+
 
 class StudentSerializer(BaseSerializer):
     """

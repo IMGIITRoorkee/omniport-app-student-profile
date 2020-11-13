@@ -2,14 +2,15 @@ import swapper
 import logging
 
 from django.db import transaction, IntegrityError
-from django.db.models import FieldDoesNotExist
+from django.db.models import FieldDoesNotExist, Q
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils.datastructures import MultiValueDictKeyError
 
+from itertools import chain
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 
@@ -20,8 +21,11 @@ from kernel.permissions.has_role import get_has_role
 
 from student_profile.permissions.is_student import IsStudent
 from student_profile.serializers.generic_serializers import common_dict
+from student_profile.serializers.student_serializer import StudentSearchSerializer
 
 logger = logging.getLogger('student_profile')
+
+Student = swapper.load_model('kernel', 'Student')
 
 models = {}
 for key in common_dict:
@@ -70,7 +74,7 @@ def return_viewset(class_name):
                 """
                 Wrapper function to raise error
                 """
-    
+
                 try:
                     return func(*args, **kwargs)
                 except IntegrityError as error:
@@ -338,6 +342,27 @@ class ProfileViewset(ModelViewSet):
 
 
 common_dict['Profile']["viewset"] = ProfileViewset
+
+
+class StudentSearchList(generics.ListAPIView):
+    """
+    View to return the student search list.
+    """
+
+    serializer_class = StudentSearchSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        query = self.request.query_params.get('query', None)
+
+        students = Student.objects.filter(
+            Q(enrolment_number__icontains=query) | 
+            Q(profile__handle__icontains=query) | 
+            Q(person__full_name__icontains=query)
+        ).order_by('enrolment_number')[:10]
+
+        result = list(chain(students))
+        return result
 
 
 class DragAndDropView(APIView):

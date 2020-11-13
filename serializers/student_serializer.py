@@ -15,7 +15,6 @@ class StudentSearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
 
-
     def to_representation(self, obj):
         if isinstance(obj, Student):
             serializer = StudentSerializer(obj)

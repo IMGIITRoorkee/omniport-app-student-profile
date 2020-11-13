@@ -8,21 +8,23 @@ celery_app.control.add_consumer('shp_publish', reply=True)
 @celery_app.task(
     queue='shp_publish'
 )
-def publish_page(full_name, enrollment_no, shp_publish_endpoint):
+def publish_page(handle, enrolment_no, shp_publish_endpoint):
     """
-    :param full_name: Full name of the student.
-    :param enrollment_no: Enrollment no of the student.
+    :param handle: Respective handle of the student for student_biodata.
+    :param enrolment_no: Enrolment no of the student.
     :param shp_publish_endpoint: Endpoint for SHP publish main worker.
 
-    :return: Publishes page with given enrollment_no
+    :return: Publishes page with given enrolment_no
     """
 
     student_data = {
-        'enrollment_no': enrollment_no,
-        'full_name': full_name,
+        'enrolment_no': enrolment_no,
+        'handle': handle,
     }
 
-    try:
+    try :
         requests.post(shp_publish_endpoint, data=student_data, timeout=15)
+    except requests.Timeout:
+        raise Exception('Timeout exceeded more than 15secs.')
     except:
-        pass
+        raise Exception('Request unsuccessful.')

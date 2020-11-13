@@ -426,11 +426,11 @@ class PublishPageView(APIView):
             )
         if is_configured:
             data = request.data
-            enrollment_no = data['enrollment_no']
-            full_name = data['full_name']
+            handle = data['handle']
+            enrolment_number = request.person.student.enrolment_number
             shp_endpoint = self.SHP.get('shp_publish_endpoint')
 
-            publish_page.delay(full_name, enrollment_no, shp_endpoint)
+            publish_page.delay(handle, enrolment_number, shp_endpoint)
             return Response(
                 "Successfully added to publish queue",
                 status=status.HTTP_200_OK,

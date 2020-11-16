@@ -22,10 +22,14 @@ from kernel.permissions.has_role import get_has_role
 from student_profile.permissions.is_student import IsStudent
 from student_profile.serializers.generic_serializers import common_dict
 from student_profile.serializers.student_serializer import StudentSearchSerializer
+from student_profile.serializers.profile import ProfileSerializer
 
 logger = logging.getLogger('student_profile')
 
 Student = swapper.load_model('kernel', 'Student')
+
+# Add Profile to common_dict
+common_dict['Profile'] = {'serializer': ProfileSerializer, 'viewset': None}
 
 models = {}
 for key in common_dict:
@@ -356,8 +360,8 @@ class StudentSearchList(generics.ListAPIView):
         query = self.request.query_params.get('query', None)
 
         students = Student.objects.filter(
-            Q(enrolment_number__icontains=query) | 
-            Q(profile__handle__icontains=query) | 
+            Q(enrolment_number__icontains=query) |
+            Q(profile__handle__icontains=query) |
             Q(person__full_name__icontains=query)
         ).order_by('enrolment_number')[:10]
 

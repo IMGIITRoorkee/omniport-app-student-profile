@@ -26,5 +26,5 @@ def publish_page(handle, enrolment_no, shp_publish_endpoint):
         requests.post(shp_publish_endpoint, data=student_data, timeout=15)
     except requests.Timeout:
         raise Exception('Timeout exceeded more than 15secs.')
-    except:
-        raise Exception('Request unsuccessful.')
+    except Exception as error:
+        raise Exception(f'Request unsuccessful. Error: {str(error)}')

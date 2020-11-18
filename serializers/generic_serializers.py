@@ -5,7 +5,6 @@ from rest_framework import serializers
 # Common Dictionary storing serializers and viewsets of similar models
 
 common_dict = {
-    'Profile': {'serializer': None, 'viewset': None},
     'Interest': {'serializer': None, 'viewset': None},
     'Achievement': {'serializer': None, 'viewset': None},
     'CurrentEducation': {'serializer': None, 'viewset': None},

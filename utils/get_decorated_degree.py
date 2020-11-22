@@ -8,9 +8,9 @@ def get_decorated_degree_with_graduation(student):
     """
     degree_grad = get_graduation(student.branch.degree.graduation[0])
     current_year = student.current_year
-    current_semester = student.current_semester
+    current_semester = 1 if student.current_semester % 2 else 2
     decorated_degree = (
         f'{degree_grad} ({int_to_roman(current_year)} Year '
-        f'{int_to_roman(int(current_semester/2))} Semester)'
+        f'{int_to_roman(current_semester)} Semester)'
     )
     return decorated_degree

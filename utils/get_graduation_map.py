@@ -1,3 +1,6 @@
+from kernel.constants.graduations import GRADUATE, POSTGRADUATE, DOCTORATE
+
+
 def get_graduation(graduation_constant):
     """
     :param graduation_constant:
@@ -5,9 +8,9 @@ def get_graduation(graduation_constant):
     """
 
     graduation_map = {
-        'gra': 'UG',
-        'pos': 'PG',
-        'doc': 'PhD',
+        GRADUATE: 'UG',
+        POSTGRADUATE: 'PG',
+        DOCTORATE: 'PhD',
     }
     if graduation_constant in graduation_map.keys():
         return graduation_map[graduation_constant]

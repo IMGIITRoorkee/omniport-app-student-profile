@@ -139,7 +139,8 @@ def return_viewset(class_name):
             profile = None
 
             try:
-                profile = Profile.objects.get(handle=pk)
+                student = Student.objects.get(enrolment_number=pk)
+                profile = Profile.objects.get(student=student)
             except ObjectDoesNotExist:
                 return Response(status=404,)
             student = profile.student
@@ -200,7 +201,8 @@ class SocialLinkViewSet(ModelViewSet):
         Profile = models['Profile']
         profile = None
         try:
-            profile = Profile.objects.get(handle=pk)
+            student = Student.objects.get(enrolment_number=pk)
+            profile = Profile.objects.get(student=student)
         except ObjectDoesNotExist:
             return Response(status=404,)
         student = profile.student
@@ -332,7 +334,8 @@ class ProfileViewset(ModelViewSet):
         """
 
         try:
-            profile = models['Profile'].objects.get(handle=pk)
+            student = Student.objects.get(enrolment_number=pk)
+            profile = models['Profile'].objects.get(student=student)
             data = self.get_serializer(profile).data
             try:
                 data['displayPicture'] = profile.student.person.display_picture.url

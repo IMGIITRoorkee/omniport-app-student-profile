@@ -50,5 +50,7 @@ class StudentSerializer(BaseSerializer):
             'name',
             'display_picture',
             'handle',
+            'branch',
+            'current_year',
             'enrolment_number',
         ]

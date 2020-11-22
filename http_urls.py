@@ -2,8 +2,12 @@ from django.conf.urls import url, include
 from rest_framework import routers
 import inflection
 
-from student_profile.views import SocialLinkViewSet, DragAndDropView, \
-    PublishPageView, StudentSearchList
+from student_profile.views import (
+    SocialLinkViewSet, 
+    DragAndDropView,
+    PublishPageView, 
+    StudentSearchList,
+)
 from student_profile.serializers.generic_serializers import common_dict
 
 app_name = 'student_profile'

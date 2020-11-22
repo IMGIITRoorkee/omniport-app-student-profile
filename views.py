@@ -3,7 +3,11 @@ import logging
 
 from django.db import transaction, IntegrityError
 from django.db.models import FieldDoesNotExist, Q
-from django.core.exceptions import ObjectDoesNotExist, ValidationError, ImproperlyConfigured
+from django.core.exceptions import (
+    ObjectDoesNotExist, 
+    ValidationError, 
+    ImproperlyConfigured,
+)
 from django.utils.datastructures import MultiValueDictKeyError
 
 from itertools import chain
@@ -436,7 +440,7 @@ class PublishPageView(APIView):
 
             publish_page.delay(handle, enrolment_number, shp_endpoint)
             return Response(
-                "Successfully added to publish queue",
+                'Successfully added to publish queue',
                 status=status.HTTP_200_OK,
             )
         else:

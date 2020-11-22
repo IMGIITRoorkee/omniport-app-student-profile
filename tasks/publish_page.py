@@ -22,7 +22,7 @@ def publish_page(handle, enrolment_no, shp_publish_endpoint):
         'handle': handle,
     }
 
-    try :
+    try:
         requests.post(shp_publish_endpoint, data=student_data, timeout=15)
     except requests.Timeout:
         raise Exception('Timeout exceeded more than 15secs.')

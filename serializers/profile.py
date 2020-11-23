@@ -2,6 +2,10 @@ import swapper
 
 from rest_framework import serializers
 
+from student_profile.utils.get_decorated_degree import (
+    get_decorated_degree_with_graduation
+)
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     """
@@ -15,6 +19,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         source='student.enrolment_number',
         read_only=True
     )
+    branch = serializers.ReadOnlyField(
+        source='student.branch.name'
+    )
+    degree_sem = serializers.SerializerMethodField()
+    email_address = serializers.SerializerMethodField()
 
     class Meta:
         """
@@ -23,3 +32,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         model = swapper.load_model('student_biodata', 'Profile')
         exclude = ('datetime_created', 'datetime_modified')
+
+    def get_degree_sem(self, instance):
+        return get_decorated_degree_with_graduation(instance.student)
+
+    def get_email_address(self, instance):
+        try:
+            contact_info = instance.student.person.contact_information.get()
+            return contact_info.institute_webmail_address
+        except:
+            return None

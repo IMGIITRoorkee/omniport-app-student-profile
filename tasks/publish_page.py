@@ -25,7 +25,7 @@ def publish_page(enrolment_no, shp_publish_endpoint, shp_publish_token):
         requests.post(
             shp_publish_endpoint,
             headers={
-                "SHP_TOKEN": shp_publish_token,
+                'SHP_TOKEN': shp_publish_token,
             },
             data=student_data,
             timeout=15

@@ -386,7 +386,8 @@ class PublishPageView(APIView):
     def check_configuration(self):
         if self.SHP:
             attributes = [
-                self.SHP.get('shp_publish_endpoint')
+                self.SHP.get('shp_publish_endpoint'),
+                self.SHP.get('shp_publish_token'),
             ]
             if all(attributes):
                 return True
@@ -433,12 +434,11 @@ class PublishPageView(APIView):
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
         if is_configured:
-            data = request.data
-            handle = data['handle']
             enrolment_number = request.person.student.enrolment_number
             shp_endpoint = self.SHP.get('shp_publish_endpoint')
+            shp_token = self.SHP.get('shp_publish_token')
 
-            publish_page.delay(handle, enrolment_number, shp_endpoint)
+            publish_page.delay(enrolment_number, shp_endpoint, shp_token)
             return Response(
                 'Successfully added to publish queue',
                 status=status.HTTP_200_OK,

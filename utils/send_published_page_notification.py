@@ -6,10 +6,10 @@ from notifications.actions import push_notification
 
 def send_published_page_notification(person, enrolment_no, shp_url):
     """
-    :param person:
-    :param enrolment_no:
-    :param shp_url:
-    :return:
+    :param person: Person whom to be notified
+    :param enrolment_no: Enrolment no used for publishing page
+    :param shp_url: Url for Student's home page
+    :return: Send a notification for published page
     """
 
     service = settings.DISCOVERY.get_app_configuration(

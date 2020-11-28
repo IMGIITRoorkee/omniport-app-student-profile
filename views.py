@@ -391,6 +391,7 @@ class PublishPageView(APIView):
             attributes = [
                 self.SHP.get('shp_publish_endpoint'),
                 self.SHP.get('shp_publish_token'),
+                self.SHP.get('shp_url')
             ]
             if all(attributes):
                 return True
@@ -440,8 +441,16 @@ class PublishPageView(APIView):
             enrolment_number = request.person.student.enrolment_number
             shp_endpoint = self.SHP.get('shp_publish_endpoint')
             shp_token = self.SHP.get('shp_publish_token')
+            shp_url = self.SHP.get('shp_url')
+            person = request.person
 
-            publish_page.delay(enrolment_number, shp_endpoint, shp_token)
+            publish_page.delay(
+                person, 
+                enrolment_number, 
+                shp_endpoint, 
+                shp_token,
+                shp_url
+            )
             return Response(
                 'Successfully added to publish queue',
                 status=status.HTTP_200_OK,

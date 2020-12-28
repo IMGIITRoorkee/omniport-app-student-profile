@@ -22,6 +22,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     branch = serializers.ReadOnlyField(
         source='student.branch.name'
     )
+    current_cgpa = serializers.ReadOnlyField(
+        source='student.current_cgpa'
+    )
     degree_sem = serializers.SerializerMethodField()
     email_address = serializers.SerializerMethodField()
 

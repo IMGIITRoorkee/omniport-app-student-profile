@@ -29,7 +29,7 @@ def send_published_page_notification(person, enrolment_no, shp_url):
         android_onclick_activity='',
         ios_onclick_action='',
         is_personalised=True,
-        person=person.id,
+        person=person,
         has_custom_users_target=False,
         persons=None
     )

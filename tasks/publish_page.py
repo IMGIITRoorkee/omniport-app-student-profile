@@ -14,10 +14,11 @@ celery_app.control.add_consumer('shp_publish', reply=True)
     queue='shp_publish'
 )
 def publish_page(
-        person, 
+        person,
+        enrolment_no,
+        student_full_name,
         student_display_picture, 
-        student_description, 
-        enrolment_no, 
+        student_description,  
         shp_publish_endpoint, 
         shp_publish_token, 
         shp_url
@@ -25,6 +26,7 @@ def publish_page(
     """
     :param person: Person who has requested for published page.
     :param enrolment_no: Enrolment no of the student.
+    :param student_full_name: Full name of the student. 
     :param student_display_picture: Display Picture url of the student.
     :param student_description: Description of the student.
     :param shp_publish_endpoint: Endpoint for SHP publish main worker.
@@ -38,6 +40,7 @@ def publish_page(
         'enrolment_no': enrolment_no,
         'display_picture': student_display_picture,
         'description': student_description,
+        'full_name': student_full_name,
     }
 
     try:

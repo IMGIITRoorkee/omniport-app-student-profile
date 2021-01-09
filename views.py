@@ -439,16 +439,18 @@ class PublishPageView(APIView):
             )
         if is_configured:
             enrolment_number = request.person.student.enrolment_number
+            student_full_name = request.person.full_name
             student_description = request.data.get('description', '')
             student_display_picture = request.data.get('display_picture', '')
             shp_endpoint = self.SHP.get('shp_publish_endpoint')
             shp_token = self.SHP.get('shp_publish_token')
             shp_url = self.SHP.get('shp_url')
-            person = request.person
+            person = request.person.id
 
             publish_page.delay(
                 person, 
                 enrolment_number,
+                student_full_name,
                 student_display_picture,
                 student_description,
                 shp_endpoint, 

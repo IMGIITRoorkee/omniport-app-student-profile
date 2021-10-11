@@ -7,7 +7,6 @@ from django.core.exceptions import (
     ObjectDoesNotExist, 
     ValidationError, 
     ImproperlyConfigured,
-    FieldDoesNotExist
 )
 from django.utils.datastructures import MultiValueDictKeyError
 

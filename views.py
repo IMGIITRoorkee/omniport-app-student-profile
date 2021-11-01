@@ -2,7 +2,7 @@ import swapper
 import logging
 
 from django.db import transaction, IntegrityError
-from django.db.models import FieldDoesNotExist, Q
+from django.db.models import Q
 from django.core.exceptions import (
     ObjectDoesNotExist, 
     ValidationError, 

@@ -22,9 +22,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     branch = serializers.ReadOnlyField(
         source='student.branch.name'
     )
-    current_cgpa = serializers.ReadOnlyField(
-        source='student.current_cgpa'
-    )
+    current_cgpa = serializers.SerializerMethodField()
     degree_sem = serializers.SerializerMethodField()
     email_address = serializers.SerializerMethodField()
 
@@ -35,6 +33,9 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         model = swapper.load_model('student_biodata', 'Profile')
         exclude = ('datetime_created', 'datetime_modified')
+
+    def get_current_cgpa(self, instance):
+        return instance.student.current_cgpa if instance.show_cgpa else None
 
     def get_degree_sem(self, instance):
         return get_decorated_degree_with_graduation(instance.student)

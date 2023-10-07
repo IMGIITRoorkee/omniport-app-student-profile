@@ -106,14 +106,22 @@ def return_serializer(class_name):
                     })
 
             # For allowing unverification of entity by students
-            # and allowing change in description only if verified already
             verified = getattr(instance, 'verified', False)
+
             if verified is True:
-                if hasattr(instance, 'description'):
+                # For allowing change in project and experience description, even after verification
+                if instance.__class__.__name__ != "Position" and hasattr(instance, 'description'):
                     instance.description = validated_data.get(
-                        'description', instance.description)
+                        'description', instance.description
+                    )
+                    
+                new_visibility = validated_data.get(
+                    'visibility', instance.visibility
+                )
                 new_verified = validated_data.get(
-                    'verified', instance.verified)
+                    'verified', instance.verified
+                )
+                instance.visibility = new_visibility
                 instance.verified = new_verified
                 instance.save()
                 return instance

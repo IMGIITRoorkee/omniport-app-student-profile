@@ -519,4 +519,4 @@ class VisibilityView(APIView):
             obj.visibility  = visibility
             obj.save()
         response = serializer(objects, many = True)
-        return Response(response.data)
+        return Response(response.data , status = 200)

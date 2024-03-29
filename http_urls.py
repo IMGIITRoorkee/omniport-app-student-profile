@@ -7,6 +7,7 @@ from student_profile.views import (
     DragAndDropView,
     PublishPageView, 
     StudentSearchList,
+    VisibilityView,
 )
 from student_profile.serializers.generic_serializers import common_dict
 
@@ -27,5 +28,6 @@ urlpatterns = [
     re_path(r'publish', PublishPageView.as_view()),
     re_path(r'rearrange', DragAndDropView.as_view()),
     re_path(r'search_students', StudentSearchList.as_view()),
+    re_path(r'section_visibility', VisibilityView.as_view()),
     re_path(r'^', include(router.urls)),
 ]

@@ -149,7 +149,7 @@ def return_viewset(class_name):
 
             if is_valid_uuid(pk):
                 try:
-                    profile = Profile.objects.get(uid=pk)
+                    profile = Profile.objects.get(uuid=pk)
                 except ObjectDoesNotExist:
                     return Response(status=status.HTTP_404_NOT_FOUND)
                 student = profile.student
@@ -213,7 +213,7 @@ class SocialLinkViewSet(ModelViewSet):
         profile = None
         if is_valid_uuid(pk):
             try:
-                profile = Profile.objects.get(uid=pk)
+                profile = Profile.objects.get(uuid=pk)
             except ObjectDoesNotExist:
                 return Response(status=status.HTTP_404_NOT_FOUND)
             student = profile.student
@@ -348,7 +348,7 @@ class ProfileViewset(ModelViewSet):
         
         if is_valid_uuid(pk):
             try:
-                profile = models['Profile'].objects.get(uid=pk)
+                profile = models['Profile'].objects.get(uuid=pk)
             except ObjectDoesNotExist:
                 return Response({"detail" : f"Person with uuid - {pk} does not exist"}, status=status.HTTP_404_NOT_FOUND )
             else:    
@@ -505,28 +505,3 @@ class DragAndDropView(APIView):
                 obj.priority = order[obj.id]
                 obj.save()
         return Response(serializer(objects.order_by('priority'), many=True).data)
-    
-
-class VisibilityView(APIView):
-    """
-    API endpoint that allows the changing of visibility of the models
-    """
-    
-    permission_classes = (get_has_role('Student'), )
-    pagination_class = None
-    filter_backends = ()
-    
-    @transaction.atomic
-    def post(self, request):
-        data = request.data
-        student = get_role(self.request.person, 'Student')
-        model_name = data['model']
-        visibility = data['visibility']
-        Model = models[model_name]
-        objects = Model.objects.order_by('priority').filter(student=student)
-        serializer = common_dict[model_name]['serializer']
-        for obj in objects:
-            obj.visibility  = visibility
-            obj.save()
-        response = serializer(objects, many = True)
-        return Response(response.data , status = 200)

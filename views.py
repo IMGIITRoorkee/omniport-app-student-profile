@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
+from rest_framework import status
 
 from formula_one.models.generics.social_information import SocialLink
 from formula_one.serializers.generics.social_information import SocialLinkSerializer
@@ -30,6 +31,7 @@ from student_profile.serializers.generic_serializers import common_dict
 from student_profile.serializers.student_serializer import StudentSearchSerializer
 from student_profile.serializers.profile import ProfileSerializer
 from student_profile.tasks.publish_page import publish_page
+from student_profile.utils.check_uuid_validity import is_valid_uuid
 
 logger = logging.getLogger('student_profile')
 
@@ -145,21 +147,23 @@ def return_viewset(class_name):
             Profile = models['Profile']
             profile = None
 
-            try:
-                student = Student.objects.get(enrolment_number=pk)
-                profile = Profile.objects.get(student=student)
-            except ObjectDoesNotExist:
-                return Response(status=404,)
-            student = profile.student
-            options = ['priority', 'semester', 'start_date', 'id']
-            for option in options[:]:
+            if is_valid_uuid(pk):
                 try:
-                    Model._meta.get_field(option)
-                except FieldDoesNotExist:
-                    options.remove(option)
-            objects = Model.objects.order_by(
-                *options).filter(student=student, visibility=True)
-            return Response(self.get_serializer(objects, many=True).data)
+                    profile = Profile.objects.get(uid=pk)
+                except ObjectDoesNotExist:
+                    return Response(status=status.HTTP_404_NOT_FOUND)
+                student = profile.student
+                options = ['priority', 'semester', 'start_date', 'id']
+                for option in options[:]:
+                    try:
+                        Model._meta.get_field(option)
+                    except FieldDoesNotExist:
+                        options.remove(option)
+                objects = Model.objects.order_by(
+                    *options).filter(student=student, visibility=True)
+                return Response(self.get_serializer(objects, many=True).data)
+            else:
+                return Response({"detail" : f"{pk} is not a valid uuid"}, status=status.HTTP_404_NOT_FOUND)
 
     return Viewset
 
@@ -207,21 +211,23 @@ class SocialLinkViewSet(ModelViewSet):
         Model = SocialLink
         Profile = models['Profile']
         profile = None
-        try:
-            student = Student.objects.get(enrolment_number=pk)
-            profile = Profile.objects.get(student=student)
-        except ObjectDoesNotExist:
-            return Response(status=404,)
-        student = profile.student
-        options = ['priority', 'semester', 'start_date', 'id']
-        for option in options[:]:
+        if is_valid_uuid(pk):
             try:
-                Model._meta.get_field(option)
-            except FieldDoesNotExist:
-                options.remove(option)
-        social_info = student.person.social_information.first()
-        links = social_info.links if social_info else list()
-        return Response(SocialLinkSerializer(links, many=True).data)
+                profile = Profile.objects.get(uid=pk)
+            except ObjectDoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            student = profile.student
+            options = ['priority', 'semester', 'start_date', 'id']
+            for option in options[:]:
+                try:
+                    Model._meta.get_field(option)
+                except FieldDoesNotExist:
+                    options.remove(option)
+            social_info = student.person.social_information.first()
+            links = social_info.links if social_info else list()
+            return Response(SocialLinkSerializer(links, many=True).data)
+        else:
+            return Response({"detail" : f"{pk} is not a valid uuid"}, status=status.HTTP_404_NOT_FOUND)
 
 
 for key in common_dict:
@@ -339,18 +345,22 @@ class ProfileViewset(ModelViewSet):
         """
         A view to get the profile information without the authentication
         """
-
-        try:
-            student = Student.objects.get(enrolment_number=pk)
-            profile = models['Profile'].objects.get(student=student)
-            data = self.get_serializer(profile).data
+        
+        if is_valid_uuid(pk):
             try:
-                data['displayPicture'] = profile.student.person.display_picture.url
-            except ValueError:
-                data['displayPicture'] = None
-            data['fullName'] = profile.student.person.full_name
-        except ObjectDoesNotExist:
-            return Response(status=404,)
+                profile = models['Profile'].objects.get(uid=pk)
+            except ObjectDoesNotExist:
+                return Response({"detail" : f"Person with uuid - {pk} does not exist"}, status=status.HTTP_404_NOT_FOUND )
+            else:    
+                data = self.get_serializer(profile).data
+                try:
+                    data['displayPicture'] = profile.student.person.display_picture.url
+                except ValueError:
+                    data['displayPicture'] = None
+                data['fullName'] = profile.student.person.full_name
+        else:
+            return Response({"detail" : f"{pk} is not a valid uuid"}, status=status.HTTP_404_NOT_FOUND )
+        
 
         return Response(data)
 

@@ -495,3 +495,28 @@ class DragAndDropView(APIView):
                 obj.priority = order[obj.id]
                 obj.save()
         return Response(serializer(objects.order_by('priority'), many=True).data)
+    
+
+class VisibilityView(APIView):
+    """
+    API endpoint that allows the changing of visibility of the models
+    """
+    
+    permission_classes = (get_has_role('Student'), )
+    pagination_class = None
+    filter_backends = ()
+    
+    @transaction.atomic
+    def post(self, request):
+        data = request.data
+        student = get_role(self.request.person, 'Student')
+        model_name = data['model']
+        visibility = data['visibility']
+        Model = models[model_name]
+        objects = Model.objects.order_by('priority').filter(student=student)
+        serializer = common_dict[model_name]['serializer']
+        for obj in objects:
+            obj.visibility  = visibility
+            obj.save()
+        response = serializer(objects, many = True)
+        return Response(response.data , status = status.HTTP_200_OK)

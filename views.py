@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import AllowAny
 
 from formula_one.models.generics.social_information import SocialLink
 from formula_one.serializers.generics.social_information import SocialLinkSerializer
@@ -135,19 +136,18 @@ def return_viewset(class_name):
             self.perform_destroy(instance)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        @action(detail=True, methods=['get'], permission_classes=[])
+        @action(detail=True, methods=['get'], permission_classes=[AllowAny])
         def handle(self, request, pk=None):
             """
-            providing an open endpoint for showing the data for normal users
+            Serve the visible entries of the public profile page at the given
+            handle, to anyone, authenticated or not
             """
 
             Model = models[class_name]
             Profile = models['Profile']
-            profile = None
 
             try:
-                student = Student.objects.get(enrolment_number=pk)
-                profile = Profile.objects.get(student=student)
+                profile = Profile.objects.get(handle=pk)
             except ObjectDoesNotExist:
                 return Response(status=404,)
             student = profile.student
@@ -198,27 +198,19 @@ class SocialLinkViewSet(ModelViewSet):
         si, created = person.social_information.get_or_create()
         person.social_information.all()[0].links.add(link_instance)
 
-    @action(detail=True, methods=['get'], permission_classes=[])
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def handle(self, request, pk=None):
         """
-        providing an open endpoint fot showing the data for normal users
+        Serve the social links of the public profile page at the given handle,
+        to anyone, authenticated or not
         """
 
-        Model = SocialLink
         Profile = models['Profile']
-        profile = None
         try:
-            student = Student.objects.get(enrolment_number=pk)
-            profile = Profile.objects.get(student=student)
+            profile = Profile.objects.get(handle=pk)
         except ObjectDoesNotExist:
             return Response(status=404,)
         student = profile.student
-        options = ['priority', 'semester', 'start_date', 'id']
-        for option in options[:]:
-            try:
-                Model._meta.get_field(option)
-            except FieldDoesNotExist:
-                options.remove(option)
         social_info = student.person.social_information.first()
         links = social_info.links if social_info else list()
         return Response(SocialLinkSerializer(links, many=True).data)
@@ -334,16 +326,20 @@ class ProfileViewset(ModelViewSet):
 
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'], permission_classes=[])
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def handle(self, request, pk=None):
         """
-        A view to get the profile information without the authentication
+        Serve the public profile page at the given handle, to anyone,
+        authenticated or not
         """
 
         try:
-            student = Student.objects.get(enrolment_number=pk)
-            profile = models['Profile'].objects.get(student=student)
+            profile = models['Profile'].objects.get(handle=pk)
             data = self.get_serializer(profile).data
+            # Withheld so that a public handle cannot be turned into the
+            # enrolment number that identifies the student everywhere else
+            data.pop('enrolment_number', None)
+            data.pop('id', None)
             try:
                 data['displayPicture'] = profile.student.person.display_picture.url
             except ValueError:

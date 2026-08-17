@@ -11,7 +11,6 @@ from django.core.exceptions import (
 )
 from django.utils.datastructures import MultiValueDictKeyError
 
-from itertools import chain
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
@@ -35,6 +34,10 @@ from student_profile.tasks.publish_page import publish_page
 logger = logging.getLogger('student_profile')
 
 Student = swapper.load_model('kernel', 'Student')
+
+# Shortest prefix the student search will answer, matching the minCharacters
+# the SHP index page already enforces on its own search box
+MINIMUM_SEARCH_QUERY_LENGTH = 3
 
 # Add Profile to common_dict
 common_dict['Profile'] = {'serializer': ProfileSerializer, 'viewset': None}
@@ -359,20 +362,22 @@ class StudentSearchList(generics.ListAPIView):
     View to return the student search list.
     """
 
+    # Read by the SHP index page, which searches without credentials, so this
+    # stays open deliberately rather than by inheriting an absent default
+    permission_classes = (AllowAny, )
     serializer_class = StudentSearchSerializer
     pagination_class = None
 
     def get_queryset(self):
-        query = self.request.query_params.get('query', None)
+        query = self.request.query_params.get('query', '')
+        if len(query) < MINIMUM_SEARCH_QUERY_LENGTH:
+            return Student.objects.none()
 
-        students = Student.objects.filter(
+        return Student.objects.filter(
             Q(enrolment_number__icontains=query) |
             Q(profile__handle__icontains=query) |
             Q(person__full_name__icontains=query)
         ).order_by('enrolment_number')[:10]
-
-        result = list(chain(students))
-        return result
 
 
 class PublishPageView(APIView):

@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import AllowAny
 
 from formula_one.models.generics.social_information import SocialLink
 from formula_one.serializers.generics.social_information import SocialLinkSerializer
@@ -363,6 +364,9 @@ class StudentSearchList(generics.ListAPIView):
     View to return the student search list.
     """
 
+    # Read by the SHP index page, which searches without credentials, so this
+    # stays open deliberately rather than by inheriting an absent default
+    permission_classes = (AllowAny, )
     serializer_class = StudentSearchSerializer
     pagination_class = None
 

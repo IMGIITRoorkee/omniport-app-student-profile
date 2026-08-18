@@ -139,15 +139,16 @@ def return_viewset(class_name):
         @action(detail=True, methods=['get'], permission_classes=[AllowAny])
         def handle(self, request, pk=None):
             """
-            Serve the visible entries of the public profile page at the given
-            handle, to anyone, authenticated or not
+            Serve the visible entries of the public profile page for the given
+            enrolment number, to anyone, authenticated or not
             """
 
             Model = models[class_name]
             Profile = models['Profile']
 
             try:
-                profile = Profile.objects.get(handle=pk)
+                student = Student.objects.get(enrolment_number=pk)
+                profile = Profile.objects.get(student=student)
             except ObjectDoesNotExist:
                 return Response(status=404,)
             student = profile.student
@@ -201,13 +202,14 @@ class SocialLinkViewSet(ModelViewSet):
     @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def handle(self, request, pk=None):
         """
-        Serve the social links of the public profile page at the given handle,
-        to anyone, authenticated or not
+        Serve the social links of the public profile page for the given
+        enrolment number, to anyone, authenticated or not
         """
 
         Profile = models['Profile']
         try:
-            profile = Profile.objects.get(handle=pk)
+            student = Student.objects.get(enrolment_number=pk)
+            profile = Profile.objects.get(student=student)
         except ObjectDoesNotExist:
             return Response(status=404,)
         student = profile.student
@@ -329,17 +331,14 @@ class ProfileViewset(ModelViewSet):
     @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def handle(self, request, pk=None):
         """
-        Serve the public profile page at the given handle, to anyone,
-        authenticated or not
+        Serve the public profile page for the given enrolment number, to
+        anyone, authenticated or not
         """
 
         try:
-            profile = models['Profile'].objects.get(handle=pk)
+            student = Student.objects.get(enrolment_number=pk)
+            profile = models['Profile'].objects.get(student=student)
             data = self.get_serializer(profile).data
-            # Withheld so that a public handle cannot be turned into the
-            # enrolment number that identifies the student everywhere else
-            data.pop('enrolment_number', None)
-            data.pop('id', None)
             try:
                 data['displayPicture'] = profile.student.person.display_picture.url
             except ValueError:

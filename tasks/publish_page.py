@@ -47,7 +47,7 @@ def publish_page(
         publish_request = requests.post(
             shp_publish_endpoint,
             headers={
-                'SHP_TOKEN': shp_publish_token,
+                'SHP-TOKEN': shp_publish_token,
             },
             data=student_data,
             timeout=20

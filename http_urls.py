@@ -6,6 +6,7 @@ from student_profile.views import (
     SocialLinkViewSet, 
     DragAndDropView,
     PublishPageView, 
+    PublishStatusView,
     StudentSearchList,
     VisibilityView,
 )
@@ -25,6 +26,8 @@ for model in common_dict:
 router.register(r'social_link', SocialLinkViewSet, basename="SocialLink")
 
 urlpatterns = [
+    # Must come before 'publish', which is unanchored and would match it too
+    re_path(r'^publish/status/$', PublishStatusView.as_view()),
     re_path(r'publish', PublishPageView.as_view()),
     re_path(r'rearrange', DragAndDropView.as_view()),
     re_path(r'search_students', StudentSearchList.as_view()),

@@ -1,3 +1,4 @@
+import requests
 import swapper
 import logging
 
@@ -471,6 +472,49 @@ class PublishPageView(APIView):
                 'You probably do not need students page published',
                 status=status.HTTP_405_METHOD_NOT_ALLOWED,
             )
+
+
+class PublishStatusView(APIView):
+    """
+    API endpoint to check whether the student's published page is live
+    """
+
+    permission_classes = (get_has_role('Student'), )
+    SHP = CONFIGURATION.integrations.get('shp', False)
+
+    def get(self, request):
+        """
+        Returns whether the published page exists and when it was last written,
+        so the frontend can wait until a publish has actually landed
+        :return: exists and last_modified of the published page
+        """
+
+        shp_url = self.SHP.get('shp_url') if self.SHP else None
+        if not shp_url:
+            return Response(
+                'You probably do not need students page published',
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        enrolment_number = request.person.student.enrolment_number
+        page_url = f'{shp_url}/{enrolment_number}.html'
+        try:
+            page = requests.head(page_url, timeout=5, allow_redirects=True)
+        except requests.RequestException:
+            logger.exception(f'Could not reach published page {page_url}')
+            return Response(
+                'Could not reach the published page',
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        exists = page.status_code == status.HTTP_200_OK
+        return Response(
+            {
+                'exists': exists,
+                'last_modified': page.headers.get('Last-Modified') if exists else None,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class DragAndDropView(APIView):
